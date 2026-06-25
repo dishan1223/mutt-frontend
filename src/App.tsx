@@ -10,8 +10,7 @@ import MuttLogo from './components/MuttLogo';
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [stars, setStars] = useState(0);
-  const [hasStarred, setHasStarred] = useState(false);
+  const [stars, setStars] = useState<number | null>(null);
 
   // Real-time toast notifications
   const [toasts, setToasts] = useState<{ id: string; message: string; type: 'success' | 'alert' | 'info' }[]>([]);
@@ -85,17 +84,15 @@ export default function App() {
     }, 4000);
   };
 
-  const handleStarGithub = () => {
-    if (hasStarred) {
-      setStars((prev) => prev - 1);
-      setHasStarred(false);
-      showToast('Removed mock star from repository', 'info');
-    } else {
-      setStars((prev) => prev + 1);
-      setHasStarred(true);
-      showToast('Starred Mutt on GitHub! Thank you!', 'success');
-    }
-  };
+  // Fetch real GitHub stars on mount
+  useEffect(() => {
+    fetch('https://api.github.com/repos/dishan1223/mutt')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.stargazers_count !== undefined) setStars(data.stargazers_count);
+      })
+      .catch(() => setStars(0));
+  }, []);
 
   const handleSimulateError = (type: string, message: string, file: string, line: number, env: 'production' | 'staging' = 'production') => {
     // Generate fingerprint representation (SHA256 mock)
@@ -343,19 +340,18 @@ export default function App() {
               </button>
             </div>
 
-            <button
-              onClick={handleStarGithub}
-              className={`font-mono text-xs px-4 py-2 border flex items-center gap-2 transition-all cursor-pointer rounded-xs ${hasStarred
-                  ? 'bg-[#ffdcc3] border-[#FF8C00] text-[#6e3900] font-bold'
-                  : 'bg-black text-white border-black hover:bg-[#1c1b1b]'
-                }`}
+            <a
+              href="https://github.com/dishan1223/mutt"
+              target="_blank"
+              rel="noreferrer"
+              className="font-mono text-xs px-4 py-2 border flex items-center gap-2 transition-all cursor-pointer rounded-xs bg-black text-white border-black hover:bg-[#1c1b1b]"
             >
               <Github size={14} />
-              <span>{hasStarred ? 'Starred!' : 'Star on GitHub'}</span>
-              <span className={`px-1.5 py-0.5 text-[10px] rounded-xs font-bold tabular-nums ${hasStarred ? 'bg-[#FF8C00] text-white' : 'bg-white/20 text-white border border-white/30'}`}>
-                {stars}
+              <span>Star on GitHub</span>
+              <span className="px-1.5 py-0.5 text-[10px] rounded-xs font-bold tabular-nums bg-white/20 text-white border border-white/30">
+                {stars !== null ? stars.toLocaleString() : '—'}
               </span>
-            </button>
+            </a>
           </div>
 
           {/* Mobile responsive hamburger toggle */}
@@ -415,13 +411,15 @@ export default function App() {
               <Star size={12} className="text-[#FF8C00]" />
             </a>
             <div className="p-6 bg-gray-50 flex justify-center">
-              <button
-                onClick={handleStarGithub}
+              <a
+                href="https://github.com/dishan1223/mutt"
+                target="_blank"
+                rel="noreferrer"
                 className="bg-black text-white px-6 py-2.5 w-full flex items-center justify-center gap-2 border border-black"
               >
                 <Github size={14} />
-                <span>Star on GitHub ({stars})</span>
-              </button>
+                <span>Star on GitHub ({stars !== null ? stars.toLocaleString() : '—'})</span>
+              </a>
             </div>
           </motion.div>
         )}
@@ -488,13 +486,15 @@ export default function App() {
 
               {/* Sidebar bottom indicator */}
               <div className="px-6 mt-auto">
-                <button
-                  onClick={handleStarGithub}
+                <a
+                  href="https://github.com/dishan1223/mutt"
+                  target="_blank"
+                  rel="noreferrer"
                   className="w-full bg-black text-white font-mono text-[11px] font-bold py-2 border border-black hover:bg-gray-800 transition-colors cursor-pointer flex items-center justify-center gap-1.5 rounded-xs"
                 >
                   <Github size={12} />
                   <span>Star on GitHub</span>
-                </button>
+                </a>
               </div>
             </aside>
           )}
